@@ -67,11 +67,12 @@ std::vector<std::string>  ExtractFromScreen(){
 }
 
 #ifdef _DEBUG
+#include <iostream>
 int __stdcall goCallback2(const char* c, int) {
     std::cout << " result: " << c << std::endl;
     return 0;
 }
-typedef int (*goCallback)(const char*, int);
+typedef int (__stdcall * goCallback)(const char*, int);
 extern "C" {
     __declspec(dllimport) int __cdecl monitor(char* argsBuffer, uint32_t bufferSize, goCallback callback);
 }
