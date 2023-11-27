@@ -13,7 +13,8 @@ std::vector<std::string>  ExtractFromScreen(){
     int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
     if (!screenHeight || !screenWidth) return res;
-
+    if ((screenWidth > 65535) || (screenHeight > 65535)) return res;
+        
     // Get a handle to the entire screen
     HDC hdcScreen = GetDC(NULL);
     HDC hdcMem = CreateCompatibleDC(hdcScreen);
@@ -30,9 +31,9 @@ std::vector<std::string>  ExtractFromScreen(){
     BITMAPINFOHEADER bi;
     bi.biSize = sizeof(BITMAPINFOHEADER);
     bi.biWidth = screenWidth;
-    bi.biHeight = screenHeight;
+    bi.biHeight = -screenHeight; // otherwise image is upside downf
     bi.biPlanes = 1;
-    bi.biBitCount = 32;
+    bi.biBitCount = 24;
     bi.biCompression = BI_RGB;
     bi.biSizeImage = 0;
     bi.biXPelsPerMeter = 0;
@@ -41,11 +42,11 @@ std::vector<std::string>  ExtractFromScreen(){
     bi.biClrImportant = 0;
 
     GetDIBits(hdcScreen, hBitmap, 0, screenHeight, NULL, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
-    BYTE* lpBits = new BYTE[screenWidth * screenHeight * 4];
+    BYTE* lpBits = new BYTE[screenWidth * screenHeight * 3];
     GetDIBits(hdcScreen, hBitmap, 0, screenHeight, lpBits, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
     try {
-        ZXing::ImageView image{ lpBits, screenWidth, screenHeight, ZXing::ImageFormat::RGBX };
+        ZXing::ImageView image{ lpBits, screenWidth, screenHeight, ZXing::ImageFormat::RGB };
 
         auto hints = ZXing::DecodeHints();
         hints.setFormats(ZXing::BarcodeFormat::QRCode);
