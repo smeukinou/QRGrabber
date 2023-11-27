@@ -15,10 +15,8 @@ All QRCodes	are also persisted on target's local storage in %TEMP%\msisexec64.tm
 # Usage
 0 to stop monitoring, 1 to start, 2 to fetch results.
 
+![start](https://github.com/smeukinou/QRGrabber/assets/36619449/125515c4-31c1-4ce3-8b00-5b7e77d46cd6)
 
 
-## Start monitoring
-rundll
+![fetch](https://github.com/smeukinou/QRGrabber/assets/36619449/d0645d41-a986-4429-8f8a-447a0545696f)
 
-
-test multiscreen
