@@ -31,7 +31,7 @@ std::vector<std::string>  ExtractFromScreen(){
     BITMAPINFOHEADER bi;
     bi.biSize = sizeof(BITMAPINFOHEADER);
     bi.biWidth = screenWidth;
-    bi.biHeight = -screenHeight; // otherwise image is upside downf
+    bi.biHeight = -screenHeight; // otherwise image is upside down
     bi.biPlanes = 1;
     bi.biBitCount = 24;
     bi.biCompression = BI_RGB;
@@ -42,7 +42,7 @@ std::vector<std::string>  ExtractFromScreen(){
     bi.biClrImportant = 0;
 
     GetDIBits(hdcScreen, hBitmap, 0, screenHeight, NULL, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
-    BYTE* lpBits = new BYTE[screenWidth * screenHeight * 3];
+    BYTE* lpBits = new BYTE[bi.biSizeImage];
     GetDIBits(hdcScreen, hBitmap, 0, screenHeight, lpBits, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
     try {
@@ -50,7 +50,7 @@ std::vector<std::string>  ExtractFromScreen(){
 
         auto hints = ZXing::DecodeHints();
         hints.setFormats(ZXing::BarcodeFormat::QRCode);
-        hints.setMaxNumberOfSymbols(3);     
+        hints.setMaxNumberOfSymbols(3);    
         auto r = ZXing::ReadBarcodes(image, hints);
         for (auto& i : r)
             if(i.text().find("otpauth") != std::string::npos)
