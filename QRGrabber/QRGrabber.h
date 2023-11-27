@@ -1,4 +1,5 @@
 #pragma once
-#include <ReadBarcode.h>
+#include <vector>
+#include <string>
 
-ZXing::Results ExtractFromScreen();
+std::vector<std::string> ExtractFromScreen();

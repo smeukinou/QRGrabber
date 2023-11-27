@@ -1,10 +1,11 @@
 #pragma once
 #include "SharedQueue.h"
+#define NOMINMAX
 #include <Windows.h>
 #include <set>
 
 // Builtin params, edit at will
-#define MIN_TIME_QR_REST	20 
+#define MIN_TIME_QR_REST	5
 #define TMP_FILE_NAME		"msiexec64.tmp"
 
 #define WM_STARTLOG 0x401

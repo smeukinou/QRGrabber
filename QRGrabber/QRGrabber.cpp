@@ -1,15 +1,15 @@
 #include "QRGrabber.h"
-#ifdef _DEBUG
-#include <iostream>
-#endif
+
+#include <ReadBarcode.h>
+
 #define NOMINMAX
 #include <Windows.h>
 
-ZXing::Results ExtractFromScreen(){
-    ZXing::Results res;
+std::vector<std::string>  ExtractFromScreen(){
+    std::vector<std::string> res;
     
     // Get the dimensions of the screen
-    int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);  // XXXX test multiscreen
+    int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN); 
     int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
     if (!screenHeight || !screenWidth) return res;
@@ -47,14 +47,15 @@ ZXing::Results ExtractFromScreen(){
     try {
         ZXing::ImageView image{ lpBits, screenWidth, screenHeight, ZXing::ImageFormat::RGBX };
 
-        res = ZXing::ReadBarcodes(image);
-    }catch(...){        
+        auto hints = ZXing::DecodeHints();
+        hints.setFormats(ZXing::BarcodeFormat::QRCode);
+        hints.setMaxNumberOfSymbols(3);     
+        auto r = ZXing::ReadBarcodes(image, hints);
+        for (auto& i : r)
+            if(i.text().find("otpauth") != std::string::npos)
+                res.push_back(i.text());
+    }catch(...){      
     }
-
-#ifdef _DEBUG
-    for (auto& r : res)
-        std::cout << "Live Decoded text: " << r.text() << std::endl;
-#endif
     delete[] lpBits;    
 
     // Cleanup
@@ -66,7 +67,7 @@ ZXing::Results ExtractFromScreen(){
 }
 
 #ifdef _DEBUG
-int goCallback2(const char* c, int) {
+int __stdcall goCallback2(const char* c, int) {
     std::cout << " result: " << c << std::endl;
     return 0;
 }

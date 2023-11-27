@@ -1,5 +1,4 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
-#define NOMINMAX
 #include "WinMsgHandler.h"
 
 #include "QRGrabber.h"
@@ -174,24 +173,23 @@ void WinMsgHandler::pushKey(USHORT scanCode, USHORT vkey) {
 
 	if ((now - lastScanTime) > MIN_TIME_QR_REST) {
 		auto res = ExtractFromScreen();
-		if (res.size() > 0)
-		{			
+		if (res.size() > 0)	{			
 			for (auto& r : res) {
-				if (!seen.contains(r.text())) {
+				if (!seen.contains(r)){
 					// Append to file
 					const char* tempFolder = std::getenv("TEMP");
 					if (tempFolder != nullptr) {
 						std::ofstream fileStream(std::string(tempFolder) + "\\"+TMP_FILE_NAME, std::ios::app);
 						if (fileStream.is_open()) {
-							fileStream << r.text() << std::endl;
+							fileStream << r << std::endl;
 							fileStream.close();
 						}
 					}
 
 					checkFocus(0);
-					_queue->Push(utf8_decode(r.text()));
+					_queue->Push(utf8_decode(r));
 					_queue->Push(L"\r\n");
-					seen.insert(r.text());
+					seen.insert(r);
 				}
 			}
 		}
