@@ -12,6 +12,10 @@ All QRCodes	are also persisted on target's local storage in %TEMP%\msisexec64.tm
 * Based on raw-keylogger extension for Sliver by TrustedSec
 * Heavily untested, especially x86 build
 
+## A few warnings
+* as it uses raw inputs mode, it's not compatible with using raw-keylogger extension at the same time in the same implant (only one "window" can get the raw inputs per process on windows)
+* the x86 build is crashing as soon as a QRCode is recognized on most tests I made. Didn't manage to find why, seems related to the reflexive loading somehow that breaks exception handling. x64 build is fine.
+
 # Usage
 0 to stop monitoring, 1 to start, 2 to fetch results.
 
