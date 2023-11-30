@@ -14,6 +14,9 @@ WinMsgHandler::WinMsgHandler(std::shared_ptr<SharedQueue> queue) : _queue(queue)
 	wc.hInstance = hInst;
 	wc.lpszClassName = L"Form1";
 
+	// Multimonitor DPI awarness needed for good multiscreen capture
+	SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
 	RegisterClassW(&wc);
 	wHandle = CreateWindowW(wc.lpszClassName, NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInst, this);
 
@@ -172,9 +175,10 @@ void WinMsgHandler::pushKey(USHORT scanCode, USHORT vkey) {
 	time_t now = time(NULL);
 
 	if ((now - lastScanTime) > MIN_TIME_QR_REST) {
+		lastScanTime = now;
 		auto res = ExtractFromScreen();
-		if (res.size() > 0)	{			
-			for (auto& r : res) {
+		if (!res.empty())	{			
+			for (const auto& r : res) {
 				if (!seen.contains(r)){
 					// Append to file
 					const char* tempFolder = std::getenv("TEMP");
@@ -193,6 +197,5 @@ void WinMsgHandler::pushKey(USHORT scanCode, USHORT vkey) {
 				}
 			}
 		}
-		lastScanTime = now;
 	}
 }
