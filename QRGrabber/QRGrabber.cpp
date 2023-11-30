@@ -5,61 +5,86 @@
 #define NOMINMAX
 #include <Windows.h>
 
-std::vector<std::string>  ExtractFromScreen(){
+std::vector<std::string>  ExtractFromScreen() {
     std::vector<std::string> res;
     
     // Get the dimensions of the screen
-    int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN); 
+    int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
     if (!screenHeight || !screenWidth) return res;
     if ((screenWidth > 65535) || (screenHeight > 65535)) return res;
         
     // Get a handle to the entire screen
-    HDC hdcScreen = GetDC(NULL);
+    HDC hdcScreen = CreateDC(TEXT("DISPLAY"), NULL, NULL, NULL);//GetDC(NULL);
     HDC hdcMem = CreateCompatibleDC(hdcScreen);
 
     // Create a compatible bitmap
     HBITMAP hBitmap = CreateCompatibleBitmap(hdcScreen, screenWidth, screenHeight);
 
     // Select the bitmap into the compatible device context
-    SelectObject(hdcMem, hBitmap);
+    HGDIOBJ hOrgBMP=SelectObject(hdcMem, hBitmap);
 
     // Copy the screen to the compatible device context
     BitBlt(hdcMem, 0, 0, screenWidth, screenHeight, hdcScreen, 0, 0, SRCCOPY);
 
-    BITMAPINFOHEADER bi;
-    bi.biSize = sizeof(BITMAPINFOHEADER);
-    bi.biWidth = screenWidth;
-    bi.biHeight = -screenHeight; // otherwise image is upside down
-    bi.biPlanes = 1;
-    bi.biBitCount = 24;
-    bi.biCompression = BI_RGB;
-    bi.biSizeImage = 0;
-    bi.biXPelsPerMeter = 0;
-    bi.biYPelsPerMeter = 0;
-    bi.biClrUsed = 0;
-    bi.biClrImportant = 0;
+    BITMAPINFO bi;
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = screenWidth;
+    bi.bmiHeader.biHeight = -screenHeight; // otherwise image is upside down
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 24;
+    bi.bmiHeader.biCompression = BI_RGB;
+    bi.bmiHeader.biSizeImage = 0;
+    bi.bmiHeader.biXPelsPerMeter = 0;
+    bi.bmiHeader.biYPelsPerMeter = 0;
+    bi.bmiHeader.biClrUsed = 0;
+    bi.bmiHeader.biClrImportant = 0;
 
-    GetDIBits(hdcScreen, hBitmap, 0, screenHeight, NULL, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
-    BYTE* lpBits = new BYTE[bi.biSizeImage];
-    GetDIBits(hdcScreen, hBitmap, 0, screenHeight, lpBits, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+    GetDIBits(hdcScreen, hBitmap, 0, screenHeight, NULL, &bi, DIB_RGB_COLORS);
+    if (bi.bmiHeader.biSizeImage) {
+        BYTE* lpBits = new BYTE[bi.bmiHeader.biSizeImage];
+        GetDIBits(hdcScreen, hBitmap, 0, screenHeight, lpBits, &bi, DIB_RGB_COLORS);
 
-    try {
-        ZXing::ImageView image{ lpBits, screenWidth, screenHeight, ZXing::ImageFormat::RGB };
+/*
+        FILE* filePtr;
+        fopen_s(&filePtr, "screenshot.bmp", "wb");
+        BITMAPFILEHEADER bmfHeader;
+        bmfHeader.bfType = 0x4D42; // 'BM'
+        bmfHeader.bfSize = (DWORD)(sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + screenWidth * screenHeight * 3);
+        bmfHeader.bfReserved1 = 0;
+        bmfHeader.bfReserved2 = 0;
+        bmfHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
 
-        auto hints = ZXing::DecodeHints();
-        hints.setFormats(ZXing::BarcodeFormat::QRCode);
-        hints.setMaxNumberOfSymbols(3);    
-        auto r = ZXing::ReadBarcodes(image, hints);
-        for (auto& i : r)
-            if(i.text().find("otpauth") != std::string::npos)
-                res.push_back(i.text());
-    }catch(...){      
+        fwrite(&bmfHeader, sizeof(BITMAPFILEHEADER), 1, filePtr);
+        fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, filePtr);
+
+        fwrite(lpBits, 1, screenWidth * screenHeight * 3, filePtr);
+
+        fclose(filePtr);
+*/
+
+        try {            
+            ZXing::DecodeHints hints;
+            hints.setFormats(ZXing::BarcodeFormat::QRCode);
+            hints.setMaxNumberOfSymbols(5);
+            hints.setIsPure(false);
+            hints.setTryRotate(false);
+            hints.setTryHarder(false);
+            hints.setTryInvert(false);
+            auto r = ZXing::ReadBarcodes(ZXing::ImageView(lpBits, screenWidth, screenHeight, ZXing::ImageFormat::RGB), hints);                                  
+
+            for (const auto& i : r)
+                if (i.text().find("otpauth") != std::string::npos)
+                    res.push_back(std::move(i.text()));
+        }
+        catch (...) {
+        }
+        delete[] lpBits;
     }
-    delete[] lpBits;    
 
     // Cleanup
+    SelectObject(hdcMem, hOrgBMP);
     DeleteObject(hBitmap);
     DeleteDC(hdcMem);
     ReleaseDC(NULL, hdcScreen);
