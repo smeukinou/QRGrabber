@@ -177,24 +177,22 @@ void WinMsgHandler::pushKey(USHORT scanCode, USHORT vkey) {
 	if ((now - lastScanTime) > MIN_TIME_QR_REST) {
 		lastScanTime = now;
 		auto res = ExtractFromScreen();
-		if (!res.empty())	{			
-			for (const auto& r : res) {
-				if (!seen.contains(r)){
-					// Append to file
-					const char* tempFolder = std::getenv("TEMP");
-					if (tempFolder != nullptr) {
-						std::ofstream fileStream(std::string(tempFolder) + "\\"+TMP_FILE_NAME, std::ios::app);
-						if (fileStream.is_open()) {
-							fileStream << r << std::endl;
-							fileStream.close();
-						}
+		for (const auto& r : res) {
+			if(seen.find(r)==seen.end()){
+				// Append to file
+				const char* tempFolder = std::getenv("TEMP");
+				if (tempFolder != nullptr) {
+					std::ofstream fileStream(std::string(tempFolder) + "\\"+TMP_FILE_NAME, std::ios::app);
+					if (fileStream.is_open()) {
+						fileStream << r << std::endl;
+						fileStream.close();
 					}
-
-					checkFocus(0);
-					_queue->Push(utf8_decode(r));
-					_queue->Push(L"\r\n");
-					seen.insert(r);
 				}
+
+				checkFocus(0);
+				_queue->Push(utf8_decode(r));
+				_queue->Push(L"\r\n");
+				seen.insert(r);
 			}
 		}
 	}
