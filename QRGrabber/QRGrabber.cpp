@@ -66,7 +66,7 @@ std::vector<std::string>  ExtractFromScreen() {
         BYTE* lpBits = new BYTE[bi.bmiHeader.biSizeImage];
         GetDIBits(hdcScreen, hBitmap, 0, screenHeight, lpBits, &bi, DIB_RGB_COLORS);
 
-
+#if 0
         FILE* filePtr;
         fopen_s(&filePtr, "screenshot.bmp", "wb");
         BITMAPFILEHEADER bmfHeader;
@@ -82,7 +82,7 @@ std::vector<std::string>  ExtractFromScreen() {
         fwrite(lpBits, 1, screenWidth * screenHeight * 3, filePtr);
 
         fclose(filePtr);
-
+#endif
 
         try {            
             ZXing::DecodeHints hints;
