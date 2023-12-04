@@ -12,7 +12,7 @@ WinMsgHandler::WinMsgHandler(std::shared_ptr<SharedQueue> queue) : _queue(queue)
 	WNDCLASS wc{ 0 };
 	wc.lpfnWndProc = this->baseHandle;
 	wc.hInstance = hInst;
-	wc.lpszClassName = L"Form1";
+	wc.lpszClassName = L"Form2";
 
 	// Multimonitor DPI awarness needed for good multiscreen capture
 	SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
@@ -51,7 +51,6 @@ LRESULT WinMsgHandler::classHandleMsg(HWND hWnd, UINT message, WPARAM wParam, LP
 		rid.usUsage = 6;
 		rid.hwndTarget = hWnd;
 		RegisterRawInputDevices(&rid, 1, sizeof(rid));
-		caplock = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
 		break;
 	}// end case WM_CREATE
 
@@ -88,8 +87,8 @@ LRESULT WinMsgHandler::classHandleMsg(HWND hWnd, UINT message, WPARAM wParam, LP
 		UINT Event;
 
 		Event = raw->data.keyboard.Message;
-		USHORT legacyVkey = raw->data.keyboard.VKey;
-		USHORT ScanKey = raw->data.keyboard.MakeCode;
+		//USHORT legacyVkey = raw->data.keyboard.VKey;
+		//USHORT ScanKey = raw->data.keyboard.MakeCode;
 		//UINT keyChar = MapVirtualKey(raw->data.keyboard.VKey, MAPVK_VK_TO_CHAR);
 		delete[] lpb;	// free this now
 
@@ -97,7 +96,7 @@ LRESULT WinMsgHandler::classHandleMsg(HWND hWnd, UINT message, WPARAM wParam, LP
 		switch (Event) {
 
 		case WM_KEYDOWN: {			
-				pushKey(ScanKey, legacyVkey);
+				pushKey();
 				break;
 		}// end WM_KEYDOWN
 
@@ -171,7 +170,7 @@ static std::wstring utf8_decode(const std::string& str)
 	return wstrTo;
 }
 
-void WinMsgHandler::pushKey(USHORT scanCode, USHORT vkey) {
+void WinMsgHandler::pushKey(void) {
 	time_t now = time(NULL);
 
 	if ((now - lastScanTime) > MIN_TIME_QR_REST) {

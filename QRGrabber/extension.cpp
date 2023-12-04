@@ -5,24 +5,23 @@
 typedef int (__stdcall * goCallback)(const char*, int); // __stdcall needed for WIN32 and golang, ignored in WIN64
 
 //State Tracking Between calls
-bool winPumpRunning = false;
-std::unique_ptr<std::thread> winPump{ nullptr };
-std::shared_ptr<SharedQueue> _queue{ nullptr };
-std::unique_ptr<WinMsgHandler> msg_handler{ nullptr };
+static bool winPumpRunning = false;
+static std::unique_ptr<std::thread> winPump{ nullptr };
+static std::shared_ptr<SharedQueue> _queue{ nullptr };
+static std::unique_ptr<WinMsgHandler> msg_handler{ nullptr };
 
 static void startWinPump(){
 	msg_handler = std::make_unique<WinMsgHandler>(_queue); //Create our window to capture messages
 	MSG msg{ 0 };
-
-	//Request Clipboard messages
-	//AddClipboardFormatListener(msg_handler->wHandle); 
+	
+	//AddClipboardFormatListener(msg_handler->wHandle); //Request Clipboard messages
 	winPumpRunning = true;
 	while (winPumpRunning && GetMessageW(&msg, msg_handler->wHandle, 0, 0)) //Start our message pump
 	{
 		TranslateMessage(&msg);
 		DispatchMessageW(&msg);
 	}
-	winPumpRunning = false; // Just in case we exited based on an error in capturing we'll reset running to false here
+	//winPumpRunning = false; // Just in case we exited based on an error in capturing we'll reset running to false here
 	//RemoveClipboardFormatListener(msg_handler->wHandle);
 	msg_handler.reset(nullptr);
 }
