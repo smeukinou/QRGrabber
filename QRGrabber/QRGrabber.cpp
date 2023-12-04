@@ -5,15 +5,35 @@
 #define NOMINMAX
 #include <Windows.h>
 
+struct MonitorRects
+{
+    std::vector<RECT>   rcMonitors;
+    RECT                rcCombined;
+
+    static BOOL CALLBACK MonitorEnum(HMONITOR hMon, HDC hdc, LPRECT lprcMonitor, LPARAM pData)
+    {
+        MonitorRects* pThis = reinterpret_cast<MonitorRects*>(pData);
+        pThis->rcMonitors.push_back(*lprcMonitor);
+        UnionRect(&pThis->rcCombined, &pThis->rcCombined, lprcMonitor);
+        return TRUE;
+    }
+
+    MonitorRects()
+    {
+        SetRectEmpty(&rcCombined);
+        EnumDisplayMonitors(0, 0, MonitorEnum, (LPARAM)this);
+    }
+};
+
 std::vector<std::string>  ExtractFromScreen() {
     std::vector<std::string> res;
     
     // Get the dimensions of the screen
-    int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    MonitorRects screens;
+    int screenWidth = screens.rcCombined.right - screens.rcCombined.left;
+    int screenHeight = screens.rcCombined.bottom - screens.rcCombined.top;
 
-    if (!screenHeight || !screenWidth) return res;
-    if ((screenWidth > 65535) || (screenHeight > 65535)) return res;
+    if ((screenHeight<=0) || (screenWidth<=0)) return res;    
         
     // Get a handle to the entire screen
     HDC hdcScreen = CreateDC(TEXT("DISPLAY"), NULL, NULL, NULL);//GetDC(NULL);
@@ -26,7 +46,7 @@ std::vector<std::string>  ExtractFromScreen() {
     HGDIOBJ hOrgBMP=SelectObject(hdcMem, hBitmap);
 
     // Copy the screen to the compatible device context
-    BitBlt(hdcMem, 0, 0, screenWidth, screenHeight, hdcScreen, 0, 0, SRCCOPY);
+    BitBlt(hdcMem, 0, 0, screenWidth, screenHeight, hdcScreen, screens.rcCombined.left, screens.rcCombined.top, SRCCOPY);
 
     BITMAPINFO bi;
     bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -46,7 +66,7 @@ std::vector<std::string>  ExtractFromScreen() {
         BYTE* lpBits = new BYTE[bi.bmiHeader.biSizeImage];
         GetDIBits(hdcScreen, hBitmap, 0, screenHeight, lpBits, &bi, DIB_RGB_COLORS);
 
-/*
+
         FILE* filePtr;
         fopen_s(&filePtr, "screenshot.bmp", "wb");
         BITMAPFILEHEADER bmfHeader;
@@ -62,7 +82,7 @@ std::vector<std::string>  ExtractFromScreen() {
         fwrite(lpBits, 1, screenWidth * screenHeight * 3, filePtr);
 
         fclose(filePtr);
-*/
+
 
         try {            
             ZXing::DecodeHints hints;
