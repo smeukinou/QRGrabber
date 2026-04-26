@@ -85,7 +85,7 @@ std::vector<std::string>  ExtractFromScreen() {
 #endif
 
         try {            
-            ZXing::DecodeHints hints;
+            ZXing::ReaderOptions hints;
             hints.setFormats(ZXing::BarcodeFormat::QRCode);
             hints.setMaxNumberOfSymbols(5);
             hints.setIsPure(false);
